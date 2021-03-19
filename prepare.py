@@ -8,23 +8,21 @@ from sklearn.model_selection import train_test_split
 import sklearn.preprocessing
 from sklearn.preprocessing import QuantileTransformer
 
-def get_connection(db, user=env.user, host=env.host, password=env.password):
+def acquire_zillow():
     '''
-    This function uses my info from my env file to
-    create a connection url to access the Codeup db.
+    Grab our data from SQL
     '''
-    return f'mysql+pymysql://{user}:{password}@{host}/{db}'
-
-def get_telco(df):
+    sql_query = '''select *
+    from  properties_2017
+    join predictions_2017 using(parcelid)
+    where transactiondate between "2017-05-01" and "2017-08-31"
+        and propertylandusetypeid between 260 and 266
+            or propertylandusetypeid between 273 and 279
+            and not propertylandusetypeid = 274
+        and unitcnt = 1;
     '''
-    This function reads the telco_churn data from the Codeup db into a df,
-    and returns the df.
-    '''
-    query = """
-    select * 
-    from customers;
-    """
-    df = pd.read_sql(query, get_connection('telco_churn'))
+    connection = f'mysql+pymysql://{user}:{password}@{host}/zillow'
+    df = pd.read_sql(sql_query, connection)
     return df
 
 
