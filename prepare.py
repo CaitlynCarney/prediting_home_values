@@ -8,50 +8,69 @@ from sklearn.model_selection import train_test_split
 import sklearn.preprocessing
 from sklearn.preprocessing import QuantileTransformer
 
-def acquire_zillow():
-    '''
-    Grab our data from SQL
-    '''
-    sql_query = '''select *
-    from  properties_2017
-    join predictions_2017 using(parcelid)
-    where transactiondate between "2017-05-01" and "2017-08-31"
-        and propertylandusetypeid between 260 and 266
-            or propertylandusetypeid between 273 and 279
-            and not propertylandusetypeid = 274
-        and unitcnt = 1;
-    '''
-    connection = f'mysql+pymysql://{user}:{password}@{host}/zillow'
-    df = pd.read_sql(sql_query, connection)
-    return df
 
-
-def clean_telco(df):
+def clean_zillow(df):
     '''
-    takes in dataframe
-    sets sepecific features to focus on
-    sets index
-    replace all blank cells with null values
-    drop all nulls in the df
-    change 'total_charges' dtype from object to float
-
-    returns clean data frame in a pandas dataframe
+    clean_zillow will take in df from acquire_zillow, and return cleaned pandas dataframe
+    will drop all columns with: 
+        less than 35,000 non null values
+        needs 90.72% non null values
+    will remove features:
+        'calculatedbathnbr'
+        'finishedsquarefeet12'
+        'propertycountylandusecode'
+        'logerror'
+        'transactiondate'
+        'yearbuilt'
+        'taxvaluedollarcnt'
+        'landtaxvaluedollarcnt'
+        'rawcensustractandblock'
+    rename 'bathroomcnt' to 'bathrooms'
+    rename 'bedroomcnt' to 'bedrooms'
+    rename 'calculatedfinishedsquarefeet'to 'square_feet'
+    rename 'fullbathcnt' to 'full_baths'
+    rename 'regionidzip' to 'zip_code'
+    rename 'regionidcity' to 'city'
+    rename 'regionidcounty' to 'county'
     '''
-    df = get_telco(df)
-    features = [
-    'customer_id',
-    'tenure',
-    'monthly_charges',
-    'total_charges'
-    ]
-    df = df[features]
-    df = df.set_index("customer_id")
-    df.replace(r'^\s*$', np.nan, regex=True, inplace=True)
+    #drop all the features with less than 35,000 non null values
+    df = df.dropna(axis=1,thresh=35000)
+    # drop unneeded columns
+    df = df.drop(['calculatedbathnbr', 'finishedsquarefeet12', 
+             'propertycountylandusecode', 'logerror', 'transactiondate',  
+             'yearbuilt', 'taxvaluedollarcnt', 'landtaxvaluedollarcnt', 
+              'rawcensustractandblock', 'censustractandblock', 
+              'structuretaxvaluedollarcnt', 'parcelid', 'id'], axis=1)
+    # rename the columns needed
+    df = df.rename(columns={'bathroomcnt':'bathrooms', 'bedroomcnt':'bedrooms', 
+                       'calculatedfinishedsquarefeet':'square_feet', 
+                       'fullbathcnt':'full_baths', 'regionidzip':'zip_code', 
+                       'regionidcity':'city', 'regionidcounty':'county'})
+    # drop nulls
     df = df.dropna()
-    df['total_charges'] = df.total_charges.astype('float')
+    # this ends up dropping from 38582 to 37712 
+        # we lost 870 rows by dropping
     return df
 
-def split_telco(df):
+
+def focused_zillow(df):
+    '''
+    takes in clean_zillow
+    sets sepecific features to focus on
+
+    returns a focused data frame in a pandas dataframe
+    '''
+    features = [
+    'square_feet',
+    'bedrooms',
+    'bathrooms',
+    'zip_code',
+    'propertylandusetypeid',
+    'taxamount']
+    df = df[features]
+    return df
+
+def split_zillow(df):
     '''
     splt_iris will take one argument df, a pandas dataframe, anticipated to be the telco dataset
     sets sepecific features to focus on
@@ -73,7 +92,7 @@ def split_telco(df):
 
 def min_max_scaler(train, validate, test):
     '''
-    take in split_telco df
+    take in split_zillow df
     scales the df using 'MinMaxScaler'
         makes the scaler object
         fits onto train set
