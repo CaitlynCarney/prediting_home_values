@@ -1,21 +1,135 @@
 import pandas as pd
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
-from sklearn.metrics import mean_squared_error, r2_score, explained_variance_score, mean_absolute_error
-
-from sklearn.linear_model import LinearRegression
-from sklearn.feature_selection import f_regression 
-from statsmodels.formula.api import ols
-
 from math import sqrt
 import seaborn as sns
+
+from sklearn.metrics import mean_squared_error, r2_score, explained_variance_score
+from statsmodels.formula.api import ols
+from sklearn.linear_model import LinearRegression
+from sklearn.feature_selection import f_regression 
+from sklearn.preprocessing import MinMaxScaler
+
+import prepare
+import acquire
+import explore
 import warnings
 warnings.filterwarnings('ignore')
 
-from pydataset import data
-import acquire
+def xtrain_xval_xtest():
+    '''create X_train, X_validate, X_test, y_train, y_validate, y_test'''
+    df = acquire.acquire_zillow()
+    df = prepare.clean_zillow(df)
+    df = prepare.focused_zillow(df)
+    train, validate, test = prepare.split_focused_zillow(df)
+    X_train = train.drop(columns = ['appraised_value'])
+    y_train = train.appraised_value
+    X_validate = validate.drop(columns=['appraised_value'])
+    y_validate = validate.appraised_value
+    X_test = test.drop(columns=['appraised_value'])
+    y_test = test.appraised_value
+    y_train = pd.DataFrame(y_train)
+    y_validate = pd.DataFrame(y_validate)
+    return X_train, y_train, X_validate, y_validate, X_test, y_test
 
+def eval_y_train():
+    '''Evaluate the y_train value
+    determine whether to proceed with median or mean'''
+    X_train, y_train, X_validate, y_validate, X_test, y_test = xtrain_xval_xtest()
+    home_value_baseline_median = y_train['appraised_value'].median()
+    y_train['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    y_validate['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    home_value_baseline_mean = y_train['appraised_value'].mean()
+    y_train['appraised_value_pred_mean'] = round(home_value_baseline_mean, 2)
+    y_validate['appraised_value_pred_mean'] = round(home_value_baseline_mean,2)
+    return y_train, y_validate
+
+def add_to_train():
+    '''prepare train for the next steps'''
+    df = acquire.acquire_zillow()
+    df = prepare.clean_zillow(df)
+    df = prepare.focused_zillow(df)
+    train, validate, test = prepare.split_focused_zillow(df)
+    ols_model = ols('appraised_value ~ bedrooms', data=train).fit()
+    train['yhat'] = round(ols_model.predict(train), 2)
+    train['baseline'] = train.appraised_value.mean()
+    train['residual'] = train.appraised_value - train.yhat
+    train['baseline_residual'] = train.appraised_value - train.baseline
+    train['residual_sqr'] = train.residual ** 2
+    train['baseline_residual_sqr'] =  train.baseline_residual ** 2
+    SSE = train['residual_sqr'].sum()
+    SSE_baseline =  train['baseline_residual_sqr'].sum()
+    MSE = SSE / len(df)
+    MSE_baseline = SSE_baseline / len(df)
+    RMSE = sqrt(MSE)
+    RMSE_baseline = sqrt(MSE_baseline)
+    return train
+
+def SSE_MSE_RMSE():
+    'Finds the Sum of Squares from add_to_train'
+    df = acquire.acquire_zillow()
+    df = prepare.clean_zillow(df)
+    df = prepare.focused_zillow(df)
+    train, validate, test = prepare.split_focused_zillow(df)
+    # pull from add to trian
+    train = add_to_train()
+    # set up for SSE
+    SSE = train['residual_sqr'].sum()
+    SSE_baseline =  train['baseline_residual_sqr'].sum()
+    # set up for MSE
+    MSE = SSE / len(df)
+    MSE_baseline = SSE_baseline / len(df)
+    # set up for RMSE
+    RMSE = sqrt(MSE)
+    RMSE_baseline = sqrt(MSE_baseline)
+    return SSE, SSE_baseline, MSE, MSE_baseline, RMSE, RMSE_baseline
+
+def SSE_MSE_RMSE_info():
+    'Finds the SSE, MSE, and RMSE from add_to_train'
+    df = acquire.acquire_zillow()
+    df = prepare.clean_zillow(df)
+    df = prepare.focused_zillow(df)
+    # pull from add to trian
+    train = add_to_train()
+    X_train, y_train, X_validate, y_validate, X_test, y_test = xtrain_xval_xtest()
+    home_value_baseline_median = y_train['appraised_value'].median()
+    y_train['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    y_validate['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    home_value_baseline_mean = y_train['appraised_value'].mean()
+    y_train['appraised_value_pred_mean'] = round(home_value_baseline_mean, 2)
+    y_validate['appraised_value_pred_mean'] = round(home_value_baseline_mean,2)
+    # set up for SSE
+    train['residual_sqr'] = train.residual ** 2
+    train['baseline_residual_sqr'] =  train.baseline_residual ** 2
+    SSE = train['residual_sqr'].sum()
+    SSE_baseline =  train['baseline_residual_sqr'].sum()
+    print("SSE = ", round(SSE,3))
+    print("SSE Baseline = ", round(SSE_baseline, 3))
+    print('------------------------------------------')
+    # set up for MSE
+    MSE = SSE / len(df)
+    MSE_baseline = SSE_baseline / len(df)
+    print("MSE = ", round(MSE,3))
+    print("MSE baseline = ", round(MSE_baseline,3))
+    print('------------------------------------------')
+    # set up for RMSE
+    RMSE = sqrt(MSE)
+    RMSE_baseline = sqrt(MSE_baseline)
+    print("RMSE = ", round(RMSE,3))
+    print("RMSE baseline = ", round(RMSE_baseline,3))
+    print('------------------------------------------')
+    # plot to visualize actual vs predicted. 
+    sns.set(style="darkgrid")
+    plt.hist(y_train.appraised_value, color='teal', alpha=.5, label="Actual Home Value")
+    plt.vlines(y_train.appraised_value_pred_mean, 0, 5000, color='yellow', alpha=.3, label="Predicted Mean Home Value")
+    plt.vlines(y_train.appraised_value_pred_median, 0, 5000, color='lawngreen', alpha=.2, label="Predicted Median Home Value")
+    plt.xlabel("Home Value")
+    plt.ylabel("Number Homes")
+    plt.legend()
+    plt.show()
+    
 
 def plot_residuals():
     ''' Gather tips data set from pydata

@@ -214,6 +214,7 @@ Functions used can be found in acquire.py in git hub repo
         - There are 61 columns
             - I am sure we can dwindle that down to a more managable size
 3. check out the .describe
+    - Everything looks good
 
 
 # Project Preperation
@@ -254,19 +255,84 @@ Functions used can be found in prepare.py in git hub repo
     df = df[features]
     return df```
 3. check out the new .info
+    - Takeaways:
+        - We have 37,711 entries/rows
+            - non of which ar null or blank
+        - All feature/columns are floats meaning they are numeric but have at least one decimal.
+        - our features are:
+            - `square_feet`
+            - `bedrooms`
+            - `bathrooms`
+            - `city`
+            - `house_type`
+            - `appraised_value`
 4. check out the new .describe
+    - Takeaways
+        - Averages
+            - `square_feet` = ~1,754.38
+            - `bedrooms` = ~ 3
+            - `bathrooms` = ~ 2.28
+            - `appraised_value` = ~ 49,3804.6
 5. check out the value_counts
 6. run a df.isna().sum()
+    - 0
 7. run a df.isnull().sum()
+    - 0 
 8. split the data
+
+    - spliting the clean_zillow dataset
+        ```def split_clean_zillow(df):
+        '''
+        splt_zillow will take one argument df, a pandas dataframe, anticipated to be the telco dataset
+        sets sepecific features to focus on
+        sets index
+        replace all blank cells with null values
+        drop all nulls in the df
+        change 'total_charges' dtype from object to float
+
+        perform a train, validate, test split
+
+        return: three pandas dataframes: train, validate, test
+        '''
+
+        df = clean_zillow(df)
+        train, test = train_test_split(df, test_size=.2, random_state=1234)
+        train, validate = train_test_split(train, test_size=.3, 
+                                           random_state=1234)
+        return train1, validate1, test1```
+    - spliting the focused_zillow dataset
+        ```'''splt_zillow will take one argument df, a pandas dataframe, anticipated to be the telco dataset
+        sets sepecific features to focus on
+        sets index
+        replace all blank cells with null values
+        drop all nulls in the df
+        change 'total_charges' dtype from object to float
+
+        perform a train, validate, test split
+
+        return: three pandas dataframes: train, validate, test
+        '''
+
+        df = focused_zillow(df)
+        train, test = train_test_split(df, test_size=.2, random_state=1234)
+        train, validate = train_test_split(train, test_size=.3, 
+                                           random_state=1234)
+        return train, validate, test```
+9. Scale the split data
+    
 
 
 # Project Exploration
  Plan -> Acquire -> Prepare -> **Explore** -> Model & Evaluate -> Deliver
 
 1. pull my acquire
+    `df = acquire.acquire_zillow()`
 2. pull my prepare and prepare_telco
+    `df = prepare.clean_zillow(df)`
+    
+    `df = prepare.focused_zillow(df)``
 3. split my data
+    `train, validate, test = prepare.split_focused_zillow(df)`
 4. create correlation heat map
 5. Create histograms for features being used
 6. Run a stat test for each feature
