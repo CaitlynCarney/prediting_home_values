@@ -1,18 +1,43 @@
-# Project Planning
- **Plan** -> Acquire -> Prepare -> Explore -> Model & Evaluate -> Deliver
+# <a name="top"></a>Zillow® Project - README.md
+![](http://zillow.mediaroom.com/image/Zillow_Wordmark_Blue_RGB.jpg)
+
+[[Data Dictionary](#dictionary)]
+[[Project Description](#project_description)]
+[[Project Planning](#project_planning)]
+[[Project Acquire](#project_acquire)]
+[[Project Prepare](#project_prepare)]
+[[Project Explore](#project_explore)]
+[[Key Findings](#findings)]
+[[Data Acquire, Prep, and Exploration](#wrangle)]
+[[Statistical Analysis](#stats)]
+[[Modeling](#model)]
+[[Conclusion](#conclusion)]
+
+## Data Dictonary
+<a name="dictionary"></a>
+[[Back to top](#top)]
+
+| Attribute | Definition | Data Type |
+| ----- | ----- | ----- |
+| parcelid | Unique identifier for parcels (lots) | Index/int | 
+| bathroomcnt | Number of bathrooms in home including fractional bathrooms | float |
+| bedroomcnt | Number of bedrooms in home | float |
+| square_feet | Calculated total finished living area of the home | float |
+| latitude | Latitude of the middle of the parcel multiplied by 10<sup>6</sup> | float |
+| longitude | Longitude of the middle of the parcel multiplied by 10<sup>6</sup> | float |
+| year_built | The Year the principal residence was built | int |
+| tax_value* | The total tax assessed value of the parcel | float |
+| age_of_home | year_built minus 2021 | int |
+| beds_and_baths | The sum of all bedrooms and bathrooms | float |
+| beds_per_sqft | The number of bedrooms divided by the square_feet | float |
+| baths_per_sqft | The number of bathrooms divided by the square_feet | float |
+
+
+## Project Description and Goals
+<a name="project_description"></a>
 
 - Project description:
-    - By using what I have learned in the Regression Module:
-        - data acquisition
-        - data preparation
-        - scaling
-        - exploratory analysis
-        - evaluation
-        - feature engineering
-        - and modeling
-            - I will be showing my code, findings, models, key takeaways, and recommendations regarding home pricing.
-    - I am a Zillow data scientist
-        - I need to be able to predict the values of single unit properties that the tax district assesses using the property data from those with a transaction between May-August, 2017.
+    - I need to be able to predict the values of single unit properties that the tax district assesses using the property data from those with a transaction between May-August, 2017.
         - I also need to know what states and counties these are located in, the distribution of tax rates for each county
         - I will pull data from the codeup sequel server.
 
@@ -21,170 +46,59 @@
     - but what are you defining as the homes value
     - what the county assesses the county at?
 
-- My deliverable:   
-    1.  When I have a solid presentation which:
-        - Summarize my findings about the drivers
-        - Visualizations supporting my main points.
-        - Should have:
-            - Title slide
-            - Agenda slide
-            - Executive summary slide. 
-                - Your Big Idea, 
-                - Goal, 
-                - key finding(s), 
-                - recommendation).
-            - Overview about your data sample to give context...
-                - who are they? 
-                - are they a subsample of the original? 
-                - How many people are churning over all? 
-                    - Establish the problem. 
-                    - Yes, we have an issue! 
-            - Visualization of the issue you found 
-            - Recommendation you are making
-            - Visualization of changes expected if action is taken.
-            - Conclusion and next steps (“with more time, I would like to…”, e.g.)
-            - Appendix slides are included with info such as…
-                - data definitions.
-                -  sample explanations (i.e. the subset, the types of 
-                                customers (month-to-month, internet only customers, 
-                                e.g.)).
-                    -  an aggregate table of summary data in the background of                                                                                      
-                    - your chart(s) (this can be created easily in tableau...right  
-                    - click on chart and say "create crosstab").
-    2. A github repository containing your work.
-        - Containing
-            - one-two clearly labeled final Jupyter Notebook that walks through the pipeline
-            - In exploration, I will perform my analysis including: 
-                - the use of at least two statistical tests 
-                - visualizations documenting hypotheses 
-                - takeaways. 
-            - In modeling, I will
-                - establish a baseline that I will attempt to beat with various  
-                   algorithms and/or hyperparameters. 
-                - Evaluating my model by computing the metrics and comparing.
-        - Make sure your notebook answers all the questions posed by the  
-           Zillow data science team.
-        - The repository should also contain the 
-            - .py files necessary to reproduce your work, 
-                - acquire.py
-                - prepare.py
-        - an README.md file documenting your project planning that makes it easy for someone to replicate. 
-            - Including 
-                - my goals
-                - a data dictionary, 
-                - key findings and takeaways. 
-            -  code well documented.
-        
-- Task out how you will work through the pipeline in as much detail as you need to keep on track.
 
-    - Planning:
-        - define the project itself in detail
-        - define my ultimate goals of the project
-        - how do I define succuess?
-            - what is my deliverable?
-                - how will I know I have succeeded?
-        - how will I reach my goal?
-            - how will i get from point a to point b
-                - all the way down to when I give my presentation.
-        - include my Data Dictionary
-            - providing context of what is going to be used
-            - explian my data
-        - hypothesis 
-            - these dont have to be your hard fast hypothesis.  
-                - but I have looked at this data before when working on my story telling project. So I already have thought and mini hypothesis and those are what will be used in the planning stage.
+# Project Planning
+## <a name="project_planning"></a>
+[[Back to top](#top)]
 
-    - Acquisition:
-        - Create a path from my og data source to jupyter notebook so I can prepare and clean it.
-            - In the acquire.py file (which has already been made)
-                - store the proper imports to run all of the code
-                - Create and store functions that needed to get the data from the telco chrun database.
-                    - should return pandas data frame
-        - determine the deliverable
-            - the acquire file as stated up and the above bullet point.
+ **Plan** -> Acquire -> Prepare -> Explore -> Model & Evaluate -> Deliver
 
-    - Preparation:
-        - In prepare.py store functions needed to prepare my data(important imports to run code)
-            - The final function should be able to:
-                - Split my data into train, validat, and test
-                    - that can be explored, analyzed and visualized with ease.
-                - Handle missing values
-                - Handle incorrect data and outlier tht I may want to address.
-                - Encode Variables
-                - Create new features if wated
-        - In my jupyter notebook
-            - Clean my data
-                - Explore missing values and document takeaways/action plans for handling them
-                    - explain why I did what I did
-                        - I dropped this column because ____________.
-                        - I did this because of that
-                    - is "missing" mean 0 or somehting else?
-                    - should I replace any missing values with it most likely represents like mean, median, or mode?
-                    - should i just remove the cariable column due to how much missing data there is?
-                    - should I romove rows with missing data?
-                - Explore data types and adapt types or data values as needed to have numeric represenations of each attribute
-                    - are these data types correct?
-                    - is it reading as an object when they are numeric?
-                        - maybe one of the values has an object that is causing this issue?
-            - Create any new features you want to use in your model. Some ideas you might want to explore after securing an MVP ( minimum viable product)
-                - add a column to represent tenure but in years not months
-                - single variables for or find other methods to merge variables representing the information from the following columns:
-                    - phone_service and multiple_lines
-                    - dependents and partner
-                    - streaming_tv & streaming_movies
-                    - online_security & online_backup
-                - is there a minimum?
+- Tasking out how I plan to work through the pipeline.
 
-    - Exploration:
-        - In my jupyter notebook:
-            - Answers:
-                - key questions
-                - answer my hypothesis
-                - determine the drivers of churn
-                    - making sure to have at least 2 stat tests run
-            - Makes sure to
-                - Creating visualizations
-                - Run statistical tests
-                - Document findings based on stat tests ran
-                    - the goal is to
-                        - identify features that relate to churn
-                        - indentify data integrity issues
-                        - understand how my data works
-                    - if there is a correlation
-                        - assume there is no causal relationship and brainstorm (and document) ideas on reasons there could be correlation
-            - Summarize my cnclusion, be able to answer question, and summarize takeaways and recomendations.
+### Target variable
+- appraised_value
 
-    - Modeling:
-        - In my notebook:
-            - Require to establish a baseline accuracy to determine if having a model is better than no model and train and compare at least 3 different models.
-                - Each step documented VERY well
-            - Train (fit, transform, evaluate) multiple models, varying the algorithm and/or hyperparameters you use.
-            - Compare evaluation metrics across all the models you train and select the ones you want to evaluate using your validate dataframe.
-            - Are there any variables that seem to provide limited to no additional information?
-                - Yes?
-                    - remove them
-                - No?
-                    - leave it be
-            - Based on the evaluation choose the best model to test the data
-            - Test the final model on my out of sample sata (the data set itself)
-                - summarize , interpret, and document the results
+### Starting focus features
+- bedrooms
+- bathrooms
+- square_feet
 
-    - Delivery:
-        - Introduce myself
-        - Introduce the project and goal
-        - Summarize the findings (think of the Executive summary in a presenation)
-        - The analysis I did to answer the questions and that lead to my findings. Relationships clearly visualized and takeaways are documented.
-        - Finish with key takeaways, recommendations, and next steps and be prepared to answer questions from the data science team about your project.
-        - Remember you have a time limit of 5 minutes for your presentation. Make sure you practice your notebook walkthrough keeping this time limit in mind; it will go by very quickly.
+### For Second Run Through
+- zip_code
+- house_age
+- tax_rate
+- bedrooms
+- bathrooms
+- square_feet
 
-- Clearly state your starting hypotheses and add the testing of these to your task list.(going into it you already look at the data and did a project, state these thoguhts, they dont have to be formal hypothesis)
-    - City, county, and zip code drive home pricing
-    - Number of Bedrooms drives pricing
-    - Number of bathrooms drive pricing
-    - Homes with a central unit ac (id =1) have a higher price than others
-    - The higher the square footage the higher the price
+### Projet Outline:
+- Acquisiton of data through Codeup SQL Server
+- Prepare and clean data using python
+- Explore data
+    - Remove features
+        - too many nulls?
+        - not helpful to the quest?
+    - Create features as needed
+    - Handle null values
+        - are the fixable or should they just be deleted
+    - Handle outliers
+    - Make graphs that show 
+- Run statistical analysis
+- Model data 
+- Test Data
+- Conclude results
 
+### Hypotheses
+- City, county, and zip code drive home pricing
+- Number of Bedrooms drives pricing
+- Number of bathrooms drive pricing
+- Homes with a central unit ac (id =1) have a higher price than others
+- The higher the square footage the higher the price
 
 # Project Acquiring
+<a name="project_acquire"></a>
+[[Back to top](#top)]
+
  Plan -> **Acquire** -> Prepare -> Explore -> Model & Evaluate -> Deliver
 
 Functions used can be found in acquire.py in git hub repo
@@ -218,6 +132,9 @@ Functions used can be found in acquire.py in git hub repo
 
 
 # Project Preperation
+<a name="project_prepare"></a>
+[[Back to top](#top)]
+
  Plan -> Acquire -> **Prepare** -> Explore -> Model & Evaluate -> Deliver
 
 Functions used can be found in prepare.py in git hub repo
@@ -319,10 +236,19 @@ Functions used can be found in prepare.py in git hub repo
                                            random_state=1234)
         return train, validate, test```
 9. Scale the split data
-    
-
+        ```scaler = sklearn.preprocessing.MinMaxScaler()
+        scaler.fit(train)
+        train_scaled = scaler.transform(train)
+        validate_scaled = scaler.transform(validate)
+        test_scaled = scaler.transform(test)
+        train_scaled = pd.DataFrame(train_scaled, columns=train.columns)
+        validate_scaled = pd.DataFrame(validate_scaled, columns=train.columns)
+        test_scaled = pd.DataFrame(test_scaled, columns=train.columns)```
 
 # Project Exploration
+<a name="project_explore"></a>
+[[Back to top](#top)]
+
  Plan -> Acquire -> Prepare -> **Explore** -> Model & Evaluate -> Deliver
 
 1. pull my acquire
@@ -334,20 +260,18 @@ Functions used can be found in prepare.py in git hub repo
 3. split my data
     `train, validate, test = prepare.split_focused_zillow(df)`
 4. create correlation heat map
+    `corr_map = sns.heatmap(df.corr(), cmap="viridis", vmin=-1, vmax=1, annot=True)`
 5. Create histograms for features being used
+    `train.hist(bins=50, figsize=(30,20), color='teal', ec='black');`
 6. Run a stat test for each feature
-7. Answering my questions:
+7. Answering my questions:  
 
 
+# Stat Tests
+## <a name="stats"></a>Statistical Analysis
+[[Back to top](#top)]
 
-# Project Modeling and Evaluation
- Plan -> Acquire -> Prepare -> Explore -> **Model & Evaluate** -> Deliver
+Correlation Test
+ - Used to check if two samples are related. They are often used for feature selection and multivariate analysis in data preprocessing and exploration.
 
-1. Create prediction models with in sample data
-2. Logit ran best with all 5 features
-3. Run the Logit with out of sample
-
-
-
-# Project Delivery
- Plan -> Acquire -> Prepare -> Explore -> Model & Evaluate -> **Deliver**
+## 
