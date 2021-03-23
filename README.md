@@ -19,19 +19,21 @@
 
 | Attribute | Definition | Data Type |
 | ----- | ----- | ----- |
-| parcelid | Unique identifier for parcels (lots) | Index/int | 
-| bathroomcnt | Number of bathrooms in home including fractional bathrooms | float |
-| bedroomcnt | Number of bedrooms in home | float |
-| square_feet | Calculated total finished living area of the home | float |
+| appraised_value* | The total tax assessed value of the parcel | float |
+| bathrooms | Number of bathrooms in home including fractional bathrooms | float |
+| bedrooms | Number of bedrooms in home | float |
+| city |   City in which the property is located (if any) | int |
+| county |   County in which the property is located) | int |
+| fips |   Federal Information Processing Standard code -  see https://en.wikipedia.org/wiki/FIPS_county_code for more details | int |
+| house_age | year_built minus 2021 | int |
+| house_type |  Type of land use the property is zoned for | int |
 | latitude | Latitude of the middle of the parcel multiplied by 10<sup>6</sup> | float |
 | longitude | Longitude of the middle of the parcel multiplied by 10<sup>6</sup> | float |
-| year_built | The Year the principal residence was built | int |
-| tax_value* | The total tax assessed value of the parcel | float |
-| age_of_home | year_built minus 2021 | int |
-| beds_and_baths | The sum of all bedrooms and bathrooms | float |
-| beds_per_sqft | The number of bedrooms divided by the square_feet | float |
-| baths_per_sqft | The number of bathrooms divided by the square_feet | float |
-
+| parcelid | Unique identifier for parcels (lots) | Index/int | 
+| square_feet | Calculated total finished living area of the home | float |
+| taxamount	|  The total property tax assessed for that assessment year | int |
+| untcnt |   Number of units the structure is built into (i.e. 2 = duplex, 3 = triplex, etc...) | int |
+| zip_code |  Zip code in which the property is located | int |
 
 ## Project Description and Goals
 <a name="project_description"></a>
