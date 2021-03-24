@@ -13,6 +13,9 @@
 [[Modeling](#model)]
 [[Conclusion](#conclusion)]
 
+## Link to Canva Presentation
+https://www.canva.com/design/DAEZf_lU88U/NvmcQjIH4t8IRcG3H1xRLg/view?utm_content=DAEZf_lU88U&utm_campaign=designshare&utm_medium=link&utm_source=sharebutton
+
 ## Trello Board Link
 https://trello.com/b/G0AAKAdh/regression-project
 
