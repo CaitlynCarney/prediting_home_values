@@ -53,7 +53,7 @@ def clean_zillow(df):
              'propertycountylandusecode', 'logerror', 'transactiondate',  
              'yearbuilt', 'landtaxvaluedollarcnt', 
               'rawcensustractandblock', 'censustractandblock', 
-              'structuretaxvaluedollarcnt', 'parcelid', 'id'], axis=1)
+              'structuretaxvaluedollarcnt',  'id'], axis=1)
     # rename the columns needed
     df = df.rename(columns={'bathroomcnt':'bathrooms', 'bedroomcnt':'bedrooms', 
                        'calculatedfinishedsquarefeet':'square_feet', 
@@ -160,65 +160,31 @@ def scale_focused_zillow(train, validate, test):
     
     return train_scaled, validate_scaled, test_scaled
 
-
-def min_max_scaler(train, validate, test):
+def tax_rate_dist():
     '''
-    take in split_zillow df
-    scales the df using 'MinMaxScaler'
-        makes the scaler object
-        fits onto train set
-        uses
-    returns scaled df
+    This function creates the dataframe used to calculate the tax distribution rate per county. 
     '''
-    train, validate, test = split_focused_zillow(df)
-    # Make the thing
-    scaler = sklearn.preprocessing.MinMaxScaler()
-    # fit the thing
-    scaler.fit(train)
+    df = clean_zillow(df)
+    df.set_index('parcelid', inplace=True)
+    features = ['fips', 'taxvaluedollarcnt', 'taxamount']
+    df = df[features]
     
-    X_train = train.drop(columns = ['appraised_value'])
-    y_train = train.appraised_value
-    X_validate = validate.drop(columns=['appraised_value'])
-    y_validate = validate.appraised_value
-    X_test = test.drop(columns=['appraised_value'])
-    y_test = test.appraised_value
-
-    # tun them
-    X_train_scaled = scaler.transform(X_train)
-    X_validate_scaled = scaler.transform(X_validate)
-    X_test_scaled = scaler.transform(X_test)
-    y_train_scaled = scaler.transform(y_train)
-    y_validate_scaled = scaler.transform(y_validate)
-    y_test_scaled = scaler.transform(y_test)    
+    df.columns = ['fips', 'tax_value', 'tax_amount']
     
-    # hey pandas make them into dataframes
-    X_train_scaled = pd.DataFrame(X_train_scaled, columns=train.columns)
-    X_validate_scaled = scaler.transform(X_validate_scaled, columns=train.columns)
-    X_test_scaled = scaler.transform(X_test_scaled_scaled, columns=train.columns)
-    y_train_scaled = pd.DataFrame(y_train_scaled, columns=train.columns)
-    y_validate_scaled = scaler.transform(y_validate_scaled, columns=train.columns)
-    y_test_scaled = scaler.transform(y_test_scaled, columns=train.columns)
-    # return them
+    df = df.dropna()
     
-    return train_scaled, validate_scaled, test_scaled, X_train_scaled, X_validate_scaled, X_test_scaled, y_train_scaled, y_validate_scaled, y_test_scaled
-    return train_scaled, validate_scaled, test_scaled
+    df['tax_rate'] = (df.tax_amount / df.tax_value)
+    
+    df = remove_outliers(df, 'tax_rate', 2.5)
+    df = remove_outliers(df, 'tax_value', 2.5)
+    
+    return df
 
-def quantile_transformer(train, validate, test):
-    '''
-    take in split_telco df
-    scales the df using 'MinMaxScaler'
-        makes the scaler object
-        fits onto train set
-        uses
-    returns scaled df
-    '''
-    df = split_telco(train, validate, test)
-    # Step 1 Make the thing
-    scaler = sklearn.preprocessing.QuantileTransformer(output_distribution='normal')
-    # Fit the thing
-    scaler.fit(train)
-    # Create Train Valideate and test sample sets
-    train_scaled = pd.DataFrame(train_scaled, columns=train.columns)
-    validate_scaled = pd.DataFrame(validate_scaled, columns=train.columns)
-    test_scaled = pd.DataFrame(test_scaled, columns=train.columns)
-    return train_scaled, validate_scaled, test_scaled
+def show_tax_rate_dist():
+    '''this takes the tax_rate_dist and shows it'''
+    tax = tax_rate_dist()
+    plt.hist(data=tax_df[tax_df.fips == 6037], x='tax_rate', bins=100, color='cyan', alpha=.5, ec='black', label='Los Angeles County')
+    plt.hist(data=tax_df[tax_df.fips == 6059], x='tax_rate',  bins=100, color='lawngreen', alpha=.5, ec='black', label='Orange County')
+    plt.hist(data=tax_df[tax_df.fips == 6111], x='tax_rate', bins=100, color="yellow", alpha=.5, ec='black', label='Ventura County')
+
+    plt.title('Tax Rate Distributions of 3 Southern Californian Counties')

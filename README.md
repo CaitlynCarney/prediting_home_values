@@ -13,6 +13,13 @@
 [[Modeling](#model)]
 [[Conclusion](#conclusion)]
 
+## Trello Board Link
+https://trello.com/b/G0AAKAdh/regression-project
+
+## Linkedin Link
+https://www.linkedin.com/in/caitlyn-carney-a29b241aa/
+
+
 ## Data Dictonary
 <a name="dictionary"></a>
 [[Back to top](#top)]
@@ -276,4 +283,3 @@ Functions used can be found in prepare.py in git hub repo
 Correlation Test
  - Used to check if two samples are related. They are often used for feature selection and multivariate analysis in data preprocessing and exploration.
 
-## 

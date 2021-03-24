@@ -276,6 +276,10 @@ def choose_best_model():
     rmse_train_lm = mean_squared_error(y_train.appraised_value, y_train.appraised_value_pred_lm)**(1/2)
     y_validate['appraised_value_pred_lm'] = lm.predict(X_validate)
     rmse_validate_lm = mean_squared_error(y_validate.appraised_value, y_validate.appraised_value_pred_lm)**(1/2)
+    lm = LinearRegression(normalize=True)
+    lm.fit(X_test, y_test.appraised_value)
+    y_test['appraised_value_pred_lm'] = lm.predict(X_test)
+    rmse_test_lm = mean_squared_error(y_test.appraised_value, y_test.appraised_value_pred_lm)**(1/2)
         # make sure you are using x_validate an not x_train
     # Make the choice
     print("Model Selected: RMSE for OLS using Linear Regression")
@@ -285,3 +289,5 @@ def choose_best_model():
     print("--------------------------------------------------------------")
     print("RMSE for OLS using LinearRegression\nTraining/In-Sample: ", rmse_train_lm, 
           "\nValidation/Out-of-Sample: ", rmse_validate_lm)
+    print("--------------------------------------------------------------")
+    print("RMSE for OLS using LinearRegression Test Data: ", rmse_test_lm)

@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+import acquire
 import env
 
 from sklearn.model_selection import train_test_split
@@ -12,35 +14,11 @@ from sklearn.preprocessing import QuantileTransformer
 def clean_zillow(df):
     '''
     clean_zillow will take in df from acquire_zillow, and return cleaned pandas dataframe
-    will create new feature:
-        `house_age`
-            takes the `yearbuilt` feature and subtracts it from the current year '2021'
-        `tax_rate`
-            takes the `taxvaluedollarcnt` and divides it by `taxamount`
-    will drop all columns with: 
-        less than 35,000 non null values
-        needs 90.72% non null values
-    will remove features:
-        'calculatedbathnbr'
-        'finishedsquarefeet12'
-        'propertycountylandusecode'
-        'logerror'
-        'transactiondate'
-        'yearbuilt'
-        'taxvaluedollarcnt'
-        'landtaxvaluedollarcnt'
-        'rawcensustractandblock'
-    rename 'bathroomcnt' to 'bathrooms'
-    rename 'bedroomcnt' to 'bedrooms'
-    rename 'calculatedfinishedsquarefeet'to 'square_feet'
-    rename 'fullbathcnt' to 'full_baths'
-    rename 'regionidzip' to 'zip_code'
-    rename 'regionidcity' to 'city'
-    rename 'regionidcounty' to 'county'
-    handle outliers using IQR rule for the features:
-        `appraised_value`
-        `square_feet`
-        `bedrooms`
+    create new features
+    will drop all columns with less than 35,000 non null values
+    drop features:
+    rename features
+    handle outliers using IQR rule
     '''
     #create new feature house_age
     df['house_age'] = 2021 - df.yearbuilt
@@ -53,7 +31,7 @@ def clean_zillow(df):
              'propertycountylandusecode', 'logerror', 'transactiondate',  
              'yearbuilt', 'landtaxvaluedollarcnt', 
               'rawcensustractandblock', 'censustractandblock', 
-              'structuretaxvaluedollarcnt', 'parcelid', 'id'], axis=1)
+              'structuretaxvaluedollarcnt',  'id'], axis=1)
     # rename the columns needed
     df = df.rename(columns={'bathroomcnt':'bathrooms', 'bedroomcnt':'bedrooms', 
                        'calculatedfinishedsquarefeet':'square_feet', 
@@ -85,9 +63,7 @@ def split_clean_zillow(df):
     replace all blank cells with null values
     drop all nulls in the df
     change 'total_charges' dtype from object to float
-    
     perform a train, validate, test split
-    
     return: three pandas dataframes: train, validate, test
     '''
     
@@ -102,7 +78,6 @@ def focused_zillow(df):
     '''
     takes in clean_zillow
     sets sepecific features to focus on
-
     returns a focused data frame in a pandas dataframe
     '''
     features = [
@@ -121,12 +96,9 @@ def split_focused_zillow(df):
     replace all blank cells with null values
     drop all nulls in the df
     change 'total_charges' dtype from object to float
-    
     perform a train, validate, test split
-    
     return: three pandas dataframes: train, validate, test
     '''
-    
     df = focused_zillow(df)
     train_validate, test = train_test_split(df, test_size=.2, random_state=1234)
     train, validate = train_test_split(train_validate, test_size=.3, 
@@ -139,25 +111,20 @@ def scale_focused_zillow(train, validate, test):
     fit scaler
     create train_scaled, validate_scaled, and test_scaled
     and turn each of them into data frames
-    
-    return: three pandas dataframes: train_scaled, validate_scaled, test_scaled
     '''
     # Make the thing
     scaler = sklearn.preprocessing.MinMaxScaler()
     # fit the thing
     scaler.fit(train)
-
     # tun them
     train_scaled = scaler.transform(train)
     validate_scaled = scaler.transform(validate)
     test_scaled = scaler.transform(test)
-    
     # hey pandas make them into dataframes
     train_scaled = pd.DataFrame(train_scaled, columns=train.columns)
     validate_scaled = pd.DataFrame(validate_scaled, columns=train.columns)
     test_scaled = pd.DataFrame(test_scaled, columns=train.columns)
     # return them
-    
     return train_scaled, validate_scaled, test_scaled
 
 
@@ -175,14 +142,12 @@ def min_max_scaler(train, validate, test):
     scaler = sklearn.preprocessing.MinMaxScaler()
     # fit the thing
     scaler.fit(train)
-    
     X_train = train.drop(columns = ['appraised_value'])
     y_train = train.appraised_value
     X_validate = validate.drop(columns=['appraised_value'])
     y_validate = validate.appraised_value
     X_test = test.drop(columns=['appraised_value'])
     y_test = test.appraised_value
-
     # tun them
     X_train_scaled = scaler.transform(X_train)
     X_validate_scaled = scaler.transform(X_validate)
@@ -190,7 +155,6 @@ def min_max_scaler(train, validate, test):
     y_train_scaled = scaler.transform(y_train)
     y_validate_scaled = scaler.transform(y_validate)
     y_test_scaled = scaler.transform(y_test)    
-    
     # hey pandas make them into dataframes
     X_train_scaled = pd.DataFrame(X_train_scaled, columns=train.columns)
     X_validate_scaled = scaler.transform(X_validate_scaled, columns=train.columns)
@@ -222,3 +186,42 @@ def quantile_transformer(train, validate, test):
     validate_scaled = pd.DataFrame(validate_scaled, columns=train.columns)
     test_scaled = pd.DataFrame(test_scaled, columns=train.columns)
     return train_scaled, validate_scaled, test_scaled
+
+
+def remove_outliers(df, col, multiplier):
+    q1 = df[col].quantile(.25)
+    q3 = df[col].quantile(.75)
+    iqr = q3 - q1
+    upper_bound = q3 + (multiplier * iqr)
+    lower_bound = q1 - (multiplier * iqr)
+    df = df[df[col] > lower_bound]
+    df = df[df[col] < upper_bound]
+    return df
+
+def tax_rate_dist():
+    '''
+    This function creates the dataframe used to calculate the tax distribution rate per county. 
+    '''
+    tax = acquire.acquire_zillow()
+    tax.set_index('parcelid', inplace=True)
+    features = ['fips', 'taxvaluedollarcnt', 'taxamount']
+    tax = tax[features]
+    tax.columns = ['fips', 'tax_value', 'tax_amount']
+    
+    tax = tax.dropna()
+    
+    tax['tax_rate'] = (tax.tax_amount / tax.tax_value)
+    
+    tax = remove_outliers(tax, 'tax_rate', 2.5)
+    tax = remove_outliers(tax, 'tax_value', 2.5)
+    
+    return tax
+
+def show_tax_rate_dist():
+    '''this takes the tax_rate_dist and shows it'''
+    tax = tax_rate_dist()
+    plt.hist(data=tax_df[tax_df.fips == 6037], x='tax_rate', bins=100, color='cyan', alpha=.5, ec='black', label='Los Angeles County')
+    plt.hist(data=tax_df[tax_df.fips == 6059], x='tax_rate',  bins=100, color='lawngreen', alpha=.5, ec='black', label='Orange County')
+    plt.hist(data=tax_df[tax_df.fips == 6111], x='tax_rate', bins=100, color="yellow", alpha=.5, ec='black', label='Ventura County')
+
+    plt.title('Tax Rate Distributions of 3 Southern Californian Counties')
