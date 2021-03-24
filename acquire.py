@@ -16,6 +16,8 @@ def acquire_zillow():
             and not propertylandusetypeid = 274
         and unitcnt = 1;
     '''
+    # make the connection to codeup sequel server
     connection = f'mysql+pymysql://{user}:{password}@{host}/zillow'
+    # Assign the df
     df = pd.read_sql(sql_query, connection)
     return df

@@ -21,22 +21,28 @@ import evaluate
 
 def xtrain_xval_xtest():
     '''create X_train, X_validate, X_test, y_train, y_validate, y_test'''
+    # get the data
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
+    # split the data
     train, validate, test = prepare.split_focused_zillow(df)
     X_train = train.drop(columns = ['appraised_value'])
-    y_train = train.appraised_value
+    y_train = train[['appraised_value']]
+
     X_validate = validate.drop(columns=['appraised_value'])
-    y_validate = validate.appraised_value
+    y_validate = validate[['appraised_value']]
+
     X_test = test.drop(columns=['appraised_value'])
-    y_test = test.appraised_value
+    y_test = test[['appraised_value']]
     y_train = pd.DataFrame(y_train)
     y_validate = pd.DataFrame(y_validate)
     return X_train, y_train, X_validate, y_validate, X_test, y_test
 
 
 def get_baseline():
+    ''' takes in data and sets the baseline for the model'''
+    # get data
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -73,6 +79,11 @@ def get_baseline():
       "\nValidate/Out-of-Sample: ", round(rmse_validate_mean, 2))
 
 def all_models_info():
+    '''takes in data
+    sets baseline
+    sets SSE, MSE, and RMSE
+    returns infor for all 4'''
+    # get data
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -125,6 +136,8 @@ def all_models_info():
           "\nValidation/Out-of-Sample: ", rmse_validate_lm2)
     
 def plot_actual_and_pred():
+    '''takes in data from all_models_info
+    plots the actual appraised_value and the predicted appraised_value'''
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -161,6 +174,8 @@ def plot_actual_and_pred():
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
     
 def plot_ols_errors():
+    '''takes in data from all_models_info
+    plots the errors of the model'''
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -199,6 +214,8 @@ def plot_ols_errors():
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
     
 def hist_ols_appraised_value():
+    '''takes in data from all_models_info
+    plots histograms of actual and predicted appraised_value'''
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -247,7 +264,12 @@ def hist_ols_appraised_value():
     plt.title("All Graphs Stacked", size=15)
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
     
+    
+    
 def choose_best_model():
+    '''takes in data from all_models_info
+    and choosed which model should move forwards as the best model
+    this model will be ran using the test data'''
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -276,10 +298,6 @@ def choose_best_model():
     rmse_train_lm = mean_squared_error(y_train.appraised_value, y_train.appraised_value_pred_lm)**(1/2)
     y_validate['appraised_value_pred_lm'] = lm.predict(X_validate)
     rmse_validate_lm = mean_squared_error(y_validate.appraised_value, y_validate.appraised_value_pred_lm)**(1/2)
-    lm = LinearRegression(normalize=True)
-    lm.fit(X_test, y_test.appraised_value)
-    y_test['appraised_value_pred_lm'] = lm.predict(X_test)
-    rmse_test_lm = mean_squared_error(y_test.appraised_value, y_test.appraised_value_pred_lm)**(1/2)
         # make sure you are using x_validate an not x_train
     # Make the choice
     print("Model Selected: RMSE for OLS using Linear Regression")
@@ -289,5 +307,53 @@ def choose_best_model():
     print("--------------------------------------------------------------")
     print("RMSE for OLS using LinearRegression\nTraining/In-Sample: ", rmse_train_lm, 
           "\nValidation/Out-of-Sample: ", rmse_validate_lm)
-    print("--------------------------------------------------------------")
+    
+def test_final_model():
+    df = acquire.acquire_zillow()
+    df = prepare.clean_zillow(df)
+    df = prepare.focused_zillow(df)
+    train, validate, test = prepare.split_focused_zillow(df)
+    
+    X_train = train.drop(columns = ['appraised_value'])
+    y_train = train[['appraised_value']]
+
+    X_validate = validate.drop(columns=['appraised_value'])
+    y_validate = validate[['appraised_value']]
+
+    X_test = test.drop(columns=['appraised_value'])
+    y_test = test[['appraised_value']]
+    y_train = pd.DataFrame(y_train)
+
+    y_validate = pd.DataFrame(y_validate)
+
+    appraised_value_pred_mean = y_train['appraised_value'].mean()
+    y_train['appraised_value_pred_mean'] = appraised_value_pred_mean
+    y_validate['appraised_value_pred_mean'] = appraised_value_pred_mean
+
+    appraised_value_pred_median = y_train['appraised_value'].median()
+    y_train['appraised_value_pred_median'] = appraised_value_pred_median
+    y_validate['appraised_value_pred_median'] = appraised_value_pred_median
+
+    rmse_train_mean = mean_squared_error(y_train.appraised_value, y_train.appraised_value_pred_mean)**(1/2)
+
+    rmse_validate_mean = mean_squared_error(y_validate.appraised_value, y_validate.appraised_value_pred_mean)**(1/2)
+    
+    # sert up the model
+    lm = LinearRegression(normalize=True)
+    # fit the model
+    lm.fit(X_train, y_train.appraised_value)
+    # predict train
+    y_train['appraised_value_pred_lm'] = lm.predict(X_train)
+    # evaluate: rmse
+    rmse_train_lm = mean_squared_error(y_train.appraised_value, y_train.appraised_value_pred_lm)**(1/2)
+    # predict validate
+    y_validate['appraised_value_pred_lm'] = lm.predict(X_validate)
+    # evaluate: rmse
+    rmse_validate_lm = mean_squared_error(y_validate.appraised_value, y_validate.appraised_value_pred_lm)**(1/2)
+        # make sure you are using x_validate an not x_train
+    # test the model
+    lm = LinearRegression(normalize=True)
+    lm.fit(X_test, y_test.appraised_value)
+    y_test['appraised_value_pred_lm'] = lm.predict(X_test)
+    rmse_test_lm = mean_squared_error(y_test.appraised_value, y_test.appraised_value_pred_lm)**(1/2)
     print("RMSE for OLS using LinearRegression Test Data: ", rmse_test_lm)

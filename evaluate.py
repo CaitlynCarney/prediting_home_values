@@ -20,9 +20,11 @@ warnings.filterwarnings('ignore')
 
 def xtrain_xval_xtest():
     '''create X_train, X_validate, X_test, y_train, y_validate, y_test'''
+    # pull from acquire and prepare
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
+    # split the data
     train, validate, test = prepare.split_focused_zillow(df)
     X_train = train.drop(columns = ['appraised_value'])
     y_train = train.appraised_value
@@ -37,10 +39,13 @@ def xtrain_xval_xtest():
 def eval_y_train():
     '''Evaluate the y_train value
     determine whether to proceed with median or mean'''
+    # grab the split up data
     X_train, y_train, X_validate, y_validate, X_test, y_test = xtrain_xval_xtest()
+    # create basleine pedicted median
     home_value_baseline_median = y_train['appraised_value'].median()
     y_train['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
     y_validate['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    # create baseline predicted mean
     home_value_baseline_mean = y_train['appraised_value'].mean()
     y_train['appraised_value_pred_mean'] = round(home_value_baseline_mean, 2)
     y_validate['appraised_value_pred_mean'] = round(home_value_baseline_mean,2)
@@ -48,17 +53,21 @@ def eval_y_train():
 
 def add_to_train():
     '''prepare train for the next steps'''
+    # get the dataframe
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
     train, validate, test = prepare.split_focused_zillow(df)
+    # create the old model
     ols_model = ols('appraised_value ~ bedrooms', data=train).fit()
+    # make new features
     train['yhat'] = round(ols_model.predict(train), 2)
     train['baseline'] = train.appraised_value.mean()
     train['residual'] = train.appraised_value - train.yhat
     train['baseline_residual'] = train.appraised_value - train.baseline
     train['residual_sqr'] = train.residual ** 2
     train['baseline_residual_sqr'] =  train.baseline_residual ** 2
+    # run the SSE, MSE, and RMSE plus their baselines
     SSE = train['residual_sqr'].sum()
     SSE_baseline =  train['baseline_residual_sqr'].sum()
     MSE = SSE / len(df)
@@ -69,6 +78,7 @@ def add_to_train():
 
 def SSE_MSE_RMSE():
     'Finds the Sum of Squares from add_to_train'
+    # get the data
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
@@ -88,15 +98,18 @@ def SSE_MSE_RMSE():
 
 def SSE_MSE_RMSE_info():
     'Finds the SSE, MSE, and RMSE from add_to_train'
+    # ge thte data
     df = acquire.acquire_zillow()
     df = prepare.clean_zillow(df)
     df = prepare.focused_zillow(df)
     # pull from add to trian
     train = add_to_train()
     X_train, y_train, X_validate, y_validate, X_test, y_test = xtrain_xval_xtest()
+    # make baseline predicted median 
     home_value_baseline_median = y_train['appraised_value'].median()
     y_train['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
     y_validate['appraised_value_pred_median'] = round(home_value_baseline_median, 2)
+    # make basleine predicted mean
     home_value_baseline_mean = y_train['appraised_value'].mean()
     y_train['appraised_value_pred_mean'] = round(home_value_baseline_mean, 2)
     y_validate['appraised_value_pred_mean'] = round(home_value_baseline_mean,2)
@@ -136,13 +149,17 @@ def plot_residuals():
     add columns yhat, baseline, residualm and baseline residual to the df
     plot residual scatterplot
     plot baseline residual scatterplots'''
+    # get the data
     tips = data("tips")
+    # fit the model
     model = ols('total_bill ~ tip', data=tips).fit()
+    # create new features
     tips['yhat'] = model.predict(tips.tip)
     yhat = tips.yhat
     tips['baseline'] = tips.total_bill.mean()
     tips['residual'] = tips.total_bill - tips.yhat
     tips['baseline_residual'] = tips.total_bill - tips.baseline
+    # plot residuals
     plt.subplots(2, 1, figsize=(13,25), sharey=True)
     sns.set(style="darkgrid")
     plt.subplot(2,1,1)
@@ -166,8 +183,11 @@ def regression_errors():
         baseline_residual_sqr
     takes in and solves SSE, ESS, TSS, MSE, and RMSE
     and returns them as well'''
+    # get the data
     tips = data("tips")
+    # fit the model
     model = ols('total_bill ~ tip', data=tips).fit()
+    # create new features
     tips['yhat'] = model.predict(tips.tip)
     yhat = tips.yhat
     tips['baseline'] = tips.total_bill.mean()
@@ -219,8 +239,11 @@ def baseline_mean_errors():
         baseline_residual_sqr
     Take sin SSE_baseline, MSE_baseline, and RMSE_baseline and returns them
     '''
+    # get the data
     tips = data("tips")
+    # fit the model
     model = ols('total_bill ~ tip', data=tips).fit()
+    # create new features
     tips['yhat'] = model.predict(tips.tip)
     yhat = tips.yhat
     tips['baseline'] = tips.total_bill.mean()
@@ -259,8 +282,11 @@ def better_than_baseline():
     Make evs
     and return true if evs is greater then baseline false if not
     '''
+    # get the data
     tips = data("tips")
+    # fit the model
     model = ols('total_bill ~ tip', data=tips).fit()
+    # create new features
     tips['yhat'] = model.predict(tips.tip)
     yhat = tips.yhat
     tips['baseline'] = tips.total_bill.mean()
@@ -268,8 +294,11 @@ def better_than_baseline():
     tips['baseline_residual'] = tips.total_bill - tips.baseline
     tips['residual_sqr'] = tips.residual ** 2
     tips['baseline_residual_sqr'] =  tips.baseline_residual ** 2
+    # set the evs
     evs = explained_variance_score(tips.total_bill, tips.yhat)
+    # set baseline
     baseline = tips.total_bill.mean()
+    # return
     if evs > baseline:
         return True
     else:

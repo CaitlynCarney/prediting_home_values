@@ -43,6 +43,7 @@ def clean_zillow(df):
     df = df.dropna()
     # this ends up dropping from 38582 to 37712 
         # we lost 870 rows by dropping
+    # Handle outliers
     df = df[df.appraised_value <= 1_123_603.75]
     # df have gone from 37,711 rows to 35,187 rows
         # the df has lost 2,524 rows
@@ -66,8 +67,9 @@ def split_clean_zillow(df):
     perform a train, validate, test split
     return: three pandas dataframes: train, validate, test
     '''
-    
+    # pull df from clean_zillow
     df = clean_zillow(df)
+    # split the data
     train, test = train_test_split(df, test_size=.2, random_state=1234)
     train, validate = train_test_split(train, test_size=.3, 
                                        random_state=1234)
@@ -80,17 +82,19 @@ def focused_zillow(df):
     sets sepecific features to focus on
     returns a focused data frame in a pandas dataframe
     '''
+    # choose features to focus on
     features = [
     'square_feet',
     'bedrooms',
     'bathrooms',
-    'appraised_value']
+    'appraised_value'] # the target
+    # return a df based only on these features
     df = df[features]
     return df
 
 def split_focused_zillow(df):
     '''
-    splt_zillow will take one argument df, a pandas dataframe, anticipated to be the telco dataset
+    split_zillow will take one argument df, a pandas dataframe, anticipated to be the telco dataset
     sets sepecific features to focus on
     sets index
     replace all blank cells with null values
@@ -99,7 +103,9 @@ def split_focused_zillow(df):
     perform a train, validate, test split
     return: three pandas dataframes: train, validate, test
     '''
+    # get df from focused_zillow function
     df = focused_zillow(df)
+    # split the focused zillow data
     train_validate, test = train_test_split(df, test_size=.2, random_state=1234)
     train, validate = train_test_split(train_validate, test_size=.3, 
                                        random_state=1234)
@@ -189,12 +195,20 @@ def quantile_transformer(train, validate, test):
 
 
 def remove_outliers(df, col, multiplier):
+    '''remove_outliers will remove the outliers of any df added to'''
+    # set quantile 1
     q1 = df[col].quantile(.25)
+    # set quantile 3
     q3 = df[col].quantile(.75)
+    # set IWR which is quantile 3 minus quantile 1
     iqr = q3 - q1
+    # set upper bound equation
     upper_bound = q3 + (multiplier * iqr)
+    # set lower bound equation
     lower_bound = q1 - (multiplier * iqr)
+    # equation to remove anything less than lower bound
     df = df[df[col] > lower_bound]
+    # equation to remove anything more than upper bound
     df = df[df[col] < upper_bound]
     return df
 
@@ -202,16 +216,20 @@ def tax_rate_dist():
     '''
     This function creates the dataframe used to calculate the tax distribution rate per county. 
     '''
+    # pull uncleaned data b/c cleaned already removed outliers and most columns
     tax = acquire.acquire_zillow()
+    # set the index
     tax.set_index('parcelid', inplace=True)
+    # what features will this df focus on?
     features = ['fips', 'taxvaluedollarcnt', 'taxamount']
     tax = tax[features]
+    # rename the columns
     tax.columns = ['fips', 'tax_value', 'tax_amount']
-    
+    # dorp any and all null values
     tax = tax.dropna()
-    
+    ## create a reature name tax_rate
     tax['tax_rate'] = (tax.tax_amount / tax.tax_value)
-    
+    #remove the outliers using the function remove_outliers
     tax = remove_outliers(tax, 'tax_rate', 2.5)
     tax = remove_outliers(tax, 'tax_value', 2.5)
     
@@ -219,7 +237,9 @@ def tax_rate_dist():
 
 def show_tax_rate_dist():
     '''this takes the tax_rate_dist and shows it'''
+    # pull df from tax_rate_dist
     tax = tax_rate_dist()
+    # plot the histograms of each county tax distribution
     plt.hist(data=tax_df[tax_df.fips == 6037], x='tax_rate', bins=100, color='cyan', alpha=.5, ec='black', label='Los Angeles County')
     plt.hist(data=tax_df[tax_df.fips == 6059], x='tax_rate',  bins=100, color='lawngreen', alpha=.5, ec='black', label='Orange County')
     plt.hist(data=tax_df[tax_df.fips == 6111], x='tax_rate', bins=100, color="yellow", alpha=.5, ec='black', label='Ventura County')
